@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>canvas-draw</title>
+    <style type="text/css">
+        html,
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="position: fixed;">
+        <button id="submit">提交</button>
+    </div>
+    <canvas id="sign_canvas" width="900" height="650">
+    </canvas>
+    <script type="text/javascript">
+        const submitBtn = document.getElementById("submit")
+        submitBtn.addEventListener("click", e => {
+            const urlSearch = window.location.search
+            const dataURL = document.getElementById('sign_canvas').toDataURL('image/png');
+            fetch("ink-submit" + urlSearch,{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: dataURL
+            })
+        })
+
+        class Painter {
+            constructor(canvas, frameRate) {
+                this.canvas = canvas;
+                this.canvas.width = this.canvas.parentNode.clientWidth;
+                this.canvas.height = this.canvas.parentNode.clientHeight - 5;
+                this.ctx = this.canvas.getContext('2d');
+
+                // 帧率
+                this.frameRate = frameRate || 60;
+
+                this._painting = false;
+                this._currentPosX = 0;
+                this._currentPosY = 0;
+                this._lastFrameTime = 0;
+            }
+
+            bindEvent() {
+                /*this.canvas.addEventListener('mousedown', (e) => {
+                    // console.log(e)
+                    this._painting = true;
+                    this.ctx.beginPath(); // 开始一条新的路径
+                    this.draw();
+                });
+    
+                this.canvas.addEventListener('mousemove', (e) => {
+                    // console.log(e)
+                    this._currentPosX = e.clientX;
+                    this._currentPosY = e.clientY;
+                });
+    
+                this.canvas.addEventListener('mouseup', () => {
+                    // console.log(e)
+                    this._painting = false;
+                    this.ctx.beginPath(); // 清空当前路径
+                });*/
+
+                this.canvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    let firstTouch = e.touches[0];
+                    this._currentPosX = firstTouch.clientX;
+                    this._currentPosY = firstTouch.clientY;
+                    this.ctx.beginPath(); // 开始一条新的路径
+                    this._painting = true;
+                    this.draw();
+                }, { passive: false });
+
+                this.canvas.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    let firstTouch = e.touches[0];
+                    this._currentPosX = firstTouch.clientX;
+                    this._currentPosY = firstTouch.clientY;
+                }, { passive: false });
+
+                this.canvas.addEventListener('touchend', (e) => {
+                    this._painting = false;
+                });
+
+            }
+
+            animate() {
+                function drawFrame(timestamp) {
+                    if (timestamp - this._lastFrameTime >= 1000 / this.frameRate) {
+                        this._lastFrameTime = timestamp;
+                        if (this._painting) {
+                            this.draw(); // 执行绘制逻辑
+                        }
+                    }
+                    requestAnimationFrame(drawFrame.bind(this));
+                }
+                requestAnimationFrame(drawFrame.bind(this));
+            }
+
+
+            draw() {
+                this.ctx.lineTo(this._currentPosX, this._currentPosY);
+                this.ctx.stroke();
+            }
+
+            init() {
+                this.bindEvent()
+                this.animate()
+            }
+
+        }
+
+        const painter = new Painter(document.getElementById('sign_canvas'), 60)
+        painter.init()
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tiny-digital-ink</title>
+    <style type="text/css">
+    html,
+    body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+    }
+    </style>
+</head>
+
+<body>
+    <h1 id="title">{{.Title}}</h1>
+    <img id="qrcode" src/>
+    
+<script>
+    const winLocation = window.location
+    const scheme = winLocation.protocol.replace(":", "")
+    const qrcodeDom = document.querySelector("#qrcode")
+    qrcodeDom.src = winLocation.origin + "/qrcode?token=" + "{{.Token}}" + "&scheme=" + scheme
+
+    const wsScheme = scheme == "https" ? "wss" : "ws"
+    const socket = new WebSocket(wsScheme + "://" + winLocation.host + "/watch?token=" + "{{.Token}}");
+
+    socket.onopen = () => {
+        console.log("WebSocket connection established");
+    };
+
+    socket.onmessage = (event) => {
+        const titleDom = document.querySelector("#title");
+
+        let data = JSON.parse(event.data)
+        if (data.type == 1) {
+            titleDom.innerText = data.data
+        } else if (data.type == 2) {
+            qrcodeDom.src = window.atob(data.data)
+            titleDom.innerText = "Complete."
+        }
+
+    };
+
+    socket.onclose = (event) => {
+        if (event.wasClean) {
+            console.log("WebSocket connection closed cleanly, code=" + event.code + ", reason=" + event.reason);
+        } else {
+            console.error("Connection died");
+        }
+    };
+
+    socket.onerror = (error) => {
+        console.error("WebSocket error: " + error.message);
+    };
+</script>
+</body>
+
+</html>
