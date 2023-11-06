@@ -204,8 +204,8 @@ func server(cache *Cache[string, *Session]) {
 
 	})
 
-	http.ListenAndServe(":"+PORT, nil)
 	fmt.Println("tiny-digital-ink start, listening: " + PORT + ".")
+	http.ListenAndServe(":"+PORT, nil)
 }
 
 /**
