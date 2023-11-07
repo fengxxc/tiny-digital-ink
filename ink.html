@@ -12,21 +12,29 @@
             width: 100%;
             height: 100%;
         }
+        #sign_canvas {
+            box-shadow: 0 0 17px 0px #999 inset;
+        }
+        #info {
+            color: #999;
+        }
     </style>
 </head>
 
 <body>
     <div style="position: fixed;">
         <button id="submit">提交</button>
+        <span id="info"></span>
     </div>
     <canvas id="sign_canvas" width="900" height="650">
     </canvas>
     <script type="text/javascript">
+
         const submitBtn = document.getElementById("submit")
         submitBtn.addEventListener("click", e => {
             const urlSearch = window.location.search
             const dataURL = document.getElementById('sign_canvas').toDataURL('image/png');
-            fetch("ink-submit" + urlSearch,{
+            fetch("ink-submit" + urlSearch, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
@@ -38,8 +46,7 @@
         class Painter {
             constructor(canvas, frameRate) {
                 this.canvas = canvas;
-                this.canvas.width = this.canvas.parentNode.clientWidth;
-                this.canvas.height = this.canvas.parentNode.clientHeight - 5;
+                this.cleanAndResize()
                 this.ctx = this.canvas.getContext('2d');
 
                 // 帧率
@@ -113,6 +120,32 @@
                 this.ctx.stroke();
             }
 
+            isStartDrawing() {
+                var context = this.canvas.getContext('2d');
+                var imageData = context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+                var pixels = imageData.data;
+                var hasDrawing = false;
+                for (var i = 0; i < pixels.length; i += 4) {
+                    // 检查每个像素的透明度（第四个分量）是否不为0
+                    if (pixels[i + 3] !== 0) {
+                        hasDrawing = true;
+                        break;
+                    }
+                }
+                return hasDrawing
+            }
+
+            cleanAndResize() {
+                const parentWidth = this.canvas.parentNode.clientWidth
+                const parentHeight = this.canvas.parentNode.clientHeight
+                // const max = Math.max(parentWidth, parentHeight)
+                // const min = Math.min(parentWidth, parentHeight)
+                // this.canvas.width = max;
+                // this.canvas.height = min;
+                this.canvas.width = parentWidth;
+                this.canvas.height = parentHeight/*  - 5 */;
+            }
+
             init() {
                 this.bindEvent()
                 this.animate()
@@ -122,6 +155,26 @@
 
         const painter = new Painter(document.getElementById('sign_canvas'), 60)
         painter.init()
+
+        const infoDom = document.getElementById("info")
+
+        function handleOrientationChange(event) {
+            if (event.matches) {
+                infoDom.innerText = "vertical screen"
+            } else {
+                infoDom.innerText = "horizontal screen"
+            }
+            const isStart = painter.isStartDrawing()
+            if (!isStart) {
+                painter.cleanAndResize()
+            }
+        }
+
+        const mediaQuery = window.matchMedia("(orientation: portrait)");
+        mediaQuery.addListener(handleOrientationChange);
+
+        // checks screen orientation init
+        handleOrientationChange(mediaQuery);
 
     </script>
 </body>
