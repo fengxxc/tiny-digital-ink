@@ -24,24 +24,12 @@
 <body>
     <div style="position: fixed;">
         <button id="submit">提交</button>
+        <button id="clean">清空</button>
         <span id="info"></span>
     </div>
     <canvas id="sign_canvas" width="900" height="650">
     </canvas>
     <script type="text/javascript">
-
-        const submitBtn = document.getElementById("submit")
-        submitBtn.addEventListener("click", e => {
-            const urlSearch = window.location.search
-            const dataURL = document.getElementById('sign_canvas').toDataURL('image/png');
-            fetch("ink-submit" + urlSearch, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: dataURL
-            })
-        })
 
         class Painter {
             constructor(canvas, frameRate) {
@@ -155,6 +143,24 @@
 
         const painter = new Painter(document.getElementById('sign_canvas'), 60)
         painter.init()
+
+        const submitBtn = document.getElementById("submit")
+        submitBtn.addEventListener("click", e => {
+            const urlSearch = window.location.search
+            const dataURL = document.getElementById('sign_canvas').toDataURL('image/png');
+            fetch("ink-submit" + urlSearch, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: dataURL
+            })
+        })
+
+        const cleanBtn = document.getElementById("clean")
+        cleanBtn.addEventListener("click", e => {
+            painter.cleanAndResize()
+        })
 
         const infoDom = document.getElementById("info")
 
